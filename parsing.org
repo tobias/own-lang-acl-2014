@@ -1,0 +1,155 @@
+#+Title: Writing your own language for fun and no profit
+#+Author: Toby Crawley
+#+Email: @tcrawley
+
+#+OPTIONS: toc:nil reveal_center:t reveal_progress:nil reveal_history:t reveal_control:nil
+#+OPTIONS: reveal_mathjax:t reveal_rolling_links:t reveal_keyboard:t reveal_overview:t num:nil
+#+REVEAL_MARGIN: 0.1
+#+REVEAL_MIN_SCALE: 0.5
+#+REVEAL_MAX_SCALE: 2.5
+#+REVEAL_TRANS: linear
+#+REVEAL_SPEED: fast
+#+REVEAL_THEME: custom
+#+REVEAL_HLEVEL: 1
+#+REVEAL_HEAD_PREAMBLE: <meta name="description" content="Writing your own language for fun and no profit">
+#+REVEAL_EXTRA_CSS: custom.css
+#+REVEAL_TITLE_SLIDE_TEMPLATE: <div id="title-slide"><h2>Writing your own language for fun and no profit</h2><h3>Toby Crawley</h3><h4>ACL 2014-02-26</h4></div>
+
+* Goal
+  Go forth and write your own.
+
+* Caveat
+
+* How it works
+  Characters ⇨ Lexer/Parser ⇨ AST ⇨ (Compiler | Interpreter)
+
+#+ATTR_REVEAL: :frag roll-in
+  Characters ⇨ Parser ⇨ IAST ⇨ Transformer ⇨ AST ⇨ Interpreter
+
+* Parsers
+  Hand-rolled vs. a parser generator
+
+* Parser Generators
+  - Instaparse (Clojure): https://github.com/engelberg/instaparse
+  - Parslet (Ruby): http://kschiess.github.io/parslet/
+  - Treetop (Ruby): https://github.com/nathansobo/treetop
+  - PEG.js (javascript): http://pegjs.majda.cz/
+  - ANTLR (Java): http://www.antlr.org/
+
+* Grammars
+  - BNF/ABNF/EBNF
+  - PEG
+
+# Augmented/Extended
+
+* Grammars
+
+#+BEGIN_SRC sh
+start = object / array
+object = ws '{' ws members? ws '}' ws
+members = (pair ws comma ws members) / (ws pair ws)
+pair = ws string ws ':' ws value ws
+value = string / number / object / array / true / false / null
+array = '[' ws elements? ws ']'
+elements = (value ws comma ws elements) / value
+string = dquote ([\u0020-\u0021] / [\u0023-\u005B] / [\u005D-\uFFFF])* dquote
+number = (int) / (int frac) / (int exp) / (int frac exp)
+int = digits / ('-' digits)
+frac = '.' digits
+exp = e digits
+e = 'e' / ('e' '+') / ('e' '-') / 'E' / ('E' '+') / ('E' '-')
+digits = [0-9]+
+true = 'true'
+false = 'false'
+null = 'null'
+comma = ','
+dquote = [\u0022]
+ws = sp crlf* sp
+sp = ([\x20] / crlf)*
+crlf = [\x0d\x0a]
+#+END_SRC
+
+* Interpreter 
+  - I cheat, and use Ruby/Clojure
+
+* Bumpkin 
+  - Functional
+  - Odd
+  - Inspired by Thnad (https://github.com/undees/thnad)
+
+* Bumpkin doesn't have
+#+ATTR_REVEAL: :frag roll-in
+  - Strings
+  - Floats
+  - Booleans
+  - Collections
+  - Variables
+  - Multi-expr Functions
+
+* Bumpkin does have
+#+ATTR_REVEAL: :frag roll-in
+  - Integers (but only parses natural numbers)
+  - Symbols
+  - Functions
+  - A conditional construct
+  - Recursion
+  - Comments
+ 
+* Bumpkin stdlib
+#+ATTR_REVEAL: :frag roll-in
+  - Subtraction (-)
+  - Variadic println (print)
+
+* Bumpkin syntax
+ #+BEGIN_SRC
+ print[42]
+ #+END_SRC
+
+* Bumpkin syntax
+ #+BEGIN_SRC
+ print[-[45 3]]
+ #+END_SRC
+
+* Bumpkin syntax
+ #+BEGIN_SRC
+ (-[5 4]) print[1] | print[0]
+ #+END_SRC
+
+* Bumpkin syntax
+#+BEGIN_SRC 
+= x y: (-[x y]) 0 | 1
+#+END_SRC
+
+* Bumpkin syntax
+#+BEGIN_SRC 
+`I have no idea what this code is doing
+#+END_SRC
+
+* Factorial
+  5! = 1 * 2 * 3 * 4 * 5
+
+* CODE
+
+* The three laws of language design
+#+ATTR_REVEAL: :frag roll-in
+  - What you get right, nobody mentions.
+  - What you get wrong, people bitch about.
+  - What is difficult to understand you have to explain to people over and over again.
+  - http://joearms.github.io/2013/05/31/a-week-with-elixir.html
+ 
+* Your challenge
+  - Improve/extend Bumpkin
+  - Write your own language  
+    
+* Inspiration?
+  - Piet - http://www.dangermouse.net/esoteric/piet.html
+  - Morse - https://github.com/sankha93/morse
+  - BrainFuck - http://en.wikipedia.org/wiki/Brainfuck
+  - Whitespace - http://en.wikipedia.org/wiki/Whitespace_(programming_language)
+  - Frink - http://www.futureboy.us/frinkdocs/
+  - Wolfram Language - https://www.youtube.com/watch?v=_P9HqHVPeik
+
+* Links
+  - Bumpkin - https://github.com/tobias/bumpkin
+  - This presentation - https://github.com/tobias/own-lang-acl-2014
+  

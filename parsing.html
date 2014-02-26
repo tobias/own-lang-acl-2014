@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>(Writing your own language for fun and no profit)</title>
+<meta name="author" content="(Toby Crawley)"/>
+<link rel="stylesheet" href="./css/reveal.min.css"/>
+<link rel="stylesheet" href="./css/theme/custom.css" id="theme"/>
+<link rel="stylesheet" href="custom.css"/>
+<link rel="stylesheet" href="./css/print/pdf.css" type="text/css" media="print"/>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<meta name="description" content="Writing your own language for fun and no profit">
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section>
+<div id="title-slide"><h2>Writing your own language for fun and no profit</h2><h3>Toby Crawley</h3><h4>ACL 2014-02-26</h4></div></section>
+
+<section>
+<section id="sec-1" >
+
+<h2>Goal</h2>
+<p>
+Go forth and write your own.
+</p>
+</section>
+</section>
+<section>
+<section id="sec-2" >
+
+<h2>Caveat</h2>
+</section>
+
+</section>
+<section>
+<section id="sec-3" >
+
+<h2>How it works</h2>
+<p>
+Characters ⇨ Lexer/Parser ⇨ AST ⇨ (Compiler | Interpreter)
+</p>
+
+<p class="fragment roll-in">
+Characters ⇨ Parser ⇨ IAST ⇨ Transformer ⇨ AST ⇨ Interpreter
+</p>
+</section>
+</section>
+<section>
+<section id="sec-4" >
+
+<h2>Parsers</h2>
+<p>
+Hand-rolled vs. a parser generator
+</p>
+</section>
+</section>
+<section>
+<section id="sec-5" >
+
+<h2>Parser Generators</h2>
+<ul class="org-ul">
+<li>Instaparse (Clojure): <a href="https://github.com/engelberg/instaparse">https://github.com/engelberg/instaparse</a>
+</li>
+<li>Parslet (Ruby): <a href="http://kschiess.github.io/parslet/">http://kschiess.github.io/parslet/</a>
+</li>
+<li>Treetop (Ruby): <a href="https://github.com/nathansobo/treetop">https://github.com/nathansobo/treetop</a>
+</li>
+<li>PEG.js (javascript): <a href="http://pegjs.majda.cz/">http://pegjs.majda.cz/</a>
+</li>
+<li>ANTLR (Java): <a href="http://www.antlr.org/">http://www.antlr.org/</a>
+</li>
+</ul>
+</section>
+</section>
+<section>
+<section id="sec-6" >
+
+<h2>Grammars</h2>
+<ul class="org-ul">
+<li>BNF/ABNF/EBNF
+</li>
+<li>PEG
+</li>
+</ul>
+</section>
+</section>
+<section>
+<section id="sec-7" >
+
+<h2>Grammars</h2>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #4f4047;">start</span> = object / array
+<span style="color: #4f4047;">object</span> = ws <span style="color: #297f29; font-style: italic;">'{'</span> ws members? ws <span style="color: #297f29; font-style: italic;">'}'</span> ws
+<span style="color: #4f4047;">members</span> = (pair ws comma ws members) / (ws pair ws)
+<span style="color: #4f4047;">pair</span> = ws string ws <span style="color: #297f29; font-style: italic;">':'</span> ws value ws
+<span style="color: #4f4047;">value</span> = string / number / object / array / true / false / null
+<span style="color: #4f4047;">array</span> = <span style="color: #297f29; font-style: italic;">'['</span> ws elements? ws <span style="color: #297f29; font-style: italic;">']'</span>
+<span style="color: #4f4047;">elements</span> = (value ws comma ws elements) / value
+<span style="color: #4f4047;">string</span> = dquote ([\u0020-\u0021] / [\u0023-\u005B] / [\u005D-\uFFFF])* dquote
+<span style="color: #4f4047;">number</span> = (int) / (int frac) / (int exp) / (int frac exp)
+<span style="color: #4f4047;">int</span> = digits / (<span style="color: #297f29; font-style: italic;">'-'</span> digits)
+<span style="color: #4f4047;">frac</span> = <span style="color: #297f29; font-style: italic;">'.'</span> digits
+<span style="color: #4f4047;">exp</span> = e digits
+<span style="color: #4f4047;">e</span> = <span style="color: #297f29; font-style: italic;">'e'</span> / (<span style="color: #297f29; font-style: italic;">'e'</span> <span style="color: #297f29; font-style: italic;">'+'</span>) / (<span style="color: #297f29; font-style: italic;">'e'</span> <span style="color: #297f29; font-style: italic;">'-'</span>) / <span style="color: #297f29; font-style: italic;">'E'</span> / (<span style="color: #297f29; font-style: italic;">'E'</span> <span style="color: #297f29; font-style: italic;">'+'</span>) / (<span style="color: #297f29; font-style: italic;">'E'</span> <span style="color: #297f29; font-style: italic;">'-'</span>)
+<span style="color: #4f4047;">digits</span> = [0-9]+
+<span style="color: #4f4047;">true</span> = <span style="color: #297f29; font-style: italic;">'true'</span>
+<span style="color: #4f4047;">false</span> = <span style="color: #297f29; font-style: italic;">'false'</span>
+<span style="color: #4f4047;">null</span> = <span style="color: #297f29; font-style: italic;">'null'</span>
+<span style="color: #4f4047;">comma</span> = <span style="color: #297f29; font-style: italic;">','</span>
+<span style="color: #4f4047;">dquote</span> = [\u0022]
+<span style="color: #4f4047;">ws</span> = sp crlf* sp
+<span style="color: #4f4047;">sp</span> = ([\x20] / crlf)*
+<span style="color: #4f4047;">crlf</span> = [\x0d\x0a]
+</pre>
+</div>
+</section>
+</section>
+<section>
+<section id="sec-8" >
+
+<h2>Interpreter</h2>
+<ul class="org-ul">
+<li>I cheat, and use Ruby/Clojure
+</li>
+</ul>
+</section>
+</section>
+<section>
+<section id="sec-9" >
+
+<h2>Bumpkin</h2>
+<ul class="org-ul">
+<li>Functional
+</li>
+<li>Odd
+</li>
+<li>Inspired by Thnad (<a href="https://github.com/undees/thnad">https://github.com/undees/thnad</a>)
+</li>
+</ul>
+</section>
+</section>
+<section>
+<section id="sec-10" >
+
+<h2>Bumpkin doesn't have</h2>
+<ul class="org-ul">
+<li class="fragment roll-in">Strings
+</li>
+<li class="fragment roll-in">Floats
+</li>
+<li class="fragment roll-in">Booleans
+</li>
+<li class="fragment roll-in">Collections
+</li>
+<li class="fragment roll-in">Variables
+</li>
+<li class="fragment roll-in">Multi-expr Functions
+</li>
+</ul>
+</section>
+</section>
+<section>
+<section id="sec-11" >
+
+<h2>Bumpkin does have</h2>
+<ul class="org-ul">
+<li class="fragment roll-in">Integers (but only parses natural numbers)
+</li>
+<li class="fragment roll-in">Symbols
+</li>
+<li class="fragment roll-in">Functions
+</li>
+<li class="fragment roll-in">A conditional construct
+</li>
+<li class="fragment roll-in">Recursion
+</li>
+<li class="fragment roll-in">Comments
+</li>
+</ul>
+</section>
+</section>
+<section>
+<section id="sec-12" >
+
+<h2>Bumpkin stdlib</h2>
+<ul class="org-ul">
+<li class="fragment roll-in">Subtraction (-)
+</li>
+<li class="fragment roll-in">Variadic println (print)
+</li>
+</ul>
+</section>
+</section>
+<section>
+<section id="sec-13" >
+
+<h2>Bumpkin syntax</h2>
+<pre class="example">
+print[42]
+</pre>
+</section>
+</section>
+<section>
+<section id="sec-14" >
+
+<h2>Bumpkin syntax</h2>
+<pre class="example">
+print[-[45 3]]
+</pre>
+</section>
+</section>
+<section>
+<section id="sec-15" >
+
+<h2>Bumpkin syntax</h2>
+<pre class="example">
+(-[5 4]) print[1] | print[0]
+</pre>
+</section>
+</section>
+<section>
+<section id="sec-16" >
+
+<h2>Bumpkin syntax</h2>
+<pre class="example">
+= x y: (-[x y]) 0 | 1
+</pre>
+</section>
+</section>
+<section>
+<section id="sec-17" >
+
+<h2>Bumpkin syntax</h2>
+<pre class="example">
+`I have no idea what this code is doing
+</pre>
+</section>
+</section>
+<section>
+<section id="sec-18" >
+
+<h2>Factorial</h2>
+<p>
+5! = 1 * 2 * 3 * 4 * 5
+</p>
+</section>
+</section>
+<section>
+<section id="sec-19" >
+
+<h2>CODE</h2>
+</section>
+
+</section>
+<section>
+<section id="sec-20" >
+
+<h2>The three laws of language design</h2>
+<ul class="org-ul">
+<li class="fragment roll-in">What you get right, nobody mentions.
+</li>
+<li class="fragment roll-in">What you get wrong, people bitch about.
+</li>
+<li class="fragment roll-in">What is difficult to understand you have to explain to people over and over again.
+</li>
+<li class="fragment roll-in"><a href="http://joearms.github.io/2013/05/31/a-week-with-elixir.html">http://joearms.github.io/2013/05/31/a-week-with-elixir.html</a>
+</li>
+</ul>
+</section>
+</section>
+<section>
+<section id="sec-21" >
+
+<h2>Your challenge</h2>
+<ul class="org-ul">
+<li>Improve/extend Bumpkin
+</li>
+<li>Write your own language  
+</li>
+</ul>
+</section>
+</section>
+<section>
+<section id="sec-22" >
+
+<h2>Inspiration?</h2>
+<ul class="org-ul">
+<li>Piet - <a href="http://www.dangermouse.net/esoteric/piet.html">http://www.dangermouse.net/esoteric/piet.html</a>
+</li>
+<li>Morse - <a href="https://github.com/sankha93/morse">https://github.com/sankha93/morse</a>
+</li>
+<li>BrainFuck - <a href="http://en.wikipedia.org/wiki/Brainfuck">http://en.wikipedia.org/wiki/Brainfuck</a>
+</li>
+<li>Whitespace - <a href="http://en.wikipedia.org/wiki/Whitespace_(programming_language)">http://en.wikipedia.org/wiki/Whitespace_(programming_language)</a>
+</li>
+<li>Frink - <a href="http://www.futureboy.us/frinkdocs/">http://www.futureboy.us/frinkdocs/</a>
+</li>
+<li>Wolfram Language - <a href="https://www.youtube.com/watch?v=_P9HqHVPeik">https://www.youtube.com/watch?v=_P9HqHVPeik</a>
+</li>
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="./lib/js/head.min.js"></script>
+<script src="./js/reveal.min.js"></script>
+<script>
+
+        		// Full list of configuration options available here:
+        		// https://github.com/hakimel/reveal.js#configuration
+        		Reveal.initialize({
+        			controls: false,
+        			progress: false,
+        			history: true,
+        			center: true,
+        			rollingLinks: true,
+        			keyboard: true,
+        			overview: true,
+        			 // slide width
+        			 // slide height
+        			margin: 0.10, // slide margin
+        			minScale: 0.50, // slide minimum scaling factor
+        			maxScale: 2.50, // slide maximum scaling factor
+
+
+        			theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        			transition: Reveal.getQueryHash().transition || 'linear', // default/cube/page/concave/zoom/linear/fade/none
+        			transitionSpeed: 'fast',
+
+        			// Optional libraries used to extend on reveal.js
+        			dependencies: [
+        				{ src: './lib/js/classList.js', condition: function() { return !document.body.classList; } }
+        				,{ src: './plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } }
+        				,{ src: './plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } }
+        				,{ src: './plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+        				,{ src: './plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } }
+        				,{ src: './plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+        				// { src: './plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; } }
+        				// { src: './plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+         				
+        			]
+        		});
+</script>
+</body>
+</html>
